@@ -1,0 +1,20 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/openjdk:11.0 # Use an appropriate Java version
+
+    steps:
+      - checkout # Check out your code
+
+      - run:
+          name: Compile and run Java code
+          command: |
+            javac hello.java
+            java hello
+
+workflows:
+  build:
+    jobs:
+      - build

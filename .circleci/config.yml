@@ -12,7 +12,7 @@ jobs:
           name: Compile and run Java code
           command: |
             javac src/hello.java
-            java src/hello
+            java -cp src hello
 
 workflows:
   build:

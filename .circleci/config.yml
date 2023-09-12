@@ -31,7 +31,6 @@ jobs:
       - run:
           name: Clone Desired Repository
           command: git clone https://github.com/pratiksandhu/BDDcucumber.git
-      - checkout
       - run:
           name: Set Timezone
           command: echo 'export TZ="/usr/share/zoneinfo/America/Toronto"' >> $BASH_ENV

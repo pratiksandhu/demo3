@@ -29,8 +29,9 @@ jobs:
     executor: maven-executor
     steps:
       - run:
-          name: Clone git repo
+          name: Clone Desired Repository
           command: git clone https://github.com/pratiksandhu/BDDcucumber.git
+      - checkout
       - run:
           name: Set Timezone
           command: echo 'export TZ="/usr/share/zoneinfo/America/Toronto"' >> $BASH_ENV
@@ -43,14 +44,18 @@ jobs:
             - v1-dependencies-
       - run:
           name: Install Dependencies
-          command: mvn dependency:go-offline
+          command: |
+            cd BDDcucumber
+            mvn dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       - run:
           name: Run Regression Tests
-          command: mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags="@Regression"" 
+          command: |
+            cd BDDcucumber
+            mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags="@Regression" 
       - store_test_results:
           path: target/junit-reports/junit.xml
       - store_artifacts:
@@ -62,6 +67,7 @@ jobs:
       - store_artifacts:
           path: target/junit-reports/junit.xml
           destination: JUnit_xml 
+
           
 
 workflows:

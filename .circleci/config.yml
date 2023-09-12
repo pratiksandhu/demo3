@@ -3,18 +3,36 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/openjdk:11.0 # Use an appropriate Java version
+      - image: cimg/openjdk:11.0 
 
     steps:
-      - checkout # Check out your code
+      - checkout 
 
       - run:
           name: Compile and run Java code
           command: |
             javac src/hello.java
             java -cp src hello
+  trigger_regression:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - run:
+          name: Trigger regression_workflow in bddcucumber
+          command: |
+            curl -u ${CIRCLECI_TOKEN}: -X POST --header "Content-Type: application/json" \
+            -d '{"branch": "master", "parameters": {"regression_workflow": true}}' \
+            https://circleci.com/api/v2/project/gh/pratiksandhu/BDDcucumber/pipeline
+          
 
 workflows:
-  build:
+  build_and_trigger:
     jobs:
       - build
+      - trigger_regression:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master

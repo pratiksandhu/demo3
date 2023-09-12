@@ -39,7 +39,7 @@ jobs:
           command: sudo apt-get update
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "pom.xml" }}
+            - v1-dependencies-{{ checksum "BDDcucumber/pom.xml" }}
             - v1-dependencies-
       - run:
           name: Install Dependencies
@@ -49,22 +49,22 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ checksum "BDDcucumber/pom.xml" }}
       - run:
           name: Run Regression Tests
           command: |
             cd BDDcucumber
             mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags="@Regression" 
       - store_test_results:
-          path: target/junit-reports/junit.xml
+          path: BDDcucumber/target/junit-reports/junit.xml
       - store_artifacts:
-          path: test-output/SparkReport/
+          path: BDDcucumber/test-output/SparkReport/
           destination: spark_report
       - store_artifacts:
-          path: PdfReport/ExtentPdf.pdf
+          path: BDDcucumber/PdfReport/ExtentPdf.pdf
           destination: pdf_reports
       - store_artifacts:
-          path: target/junit-reports/junit.xml
+          path: BDDcucumber/target/junit-reports/junit.xml
           destination: JUnit_xml 
 
           

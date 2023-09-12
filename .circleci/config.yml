@@ -66,7 +66,47 @@ jobs:
       - store_artifacts:
           path: BDDcucumber/target/junit-reports/junit.xml
           destination: JUnit_xml 
-
+  build_smoke:
+    executor: maven-executor
+    steps:
+      - run:
+          name: Clone Desired Repository
+          command: git clone https://github.com/pratiksandhu/BDDcucumber.git
+      - run:
+          name: Set Timezone
+          command: echo 'export TZ="/usr/share/zoneinfo/America/Toronto"' >> $BASH_ENV
+      - run:
+          name: Update Packages
+          command: sudo apt-get update
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "BDDcucumber/pom.xml" }}
+            - v1-dependencies-
+      - run:
+          name: Install Dependencies
+          command: |
+            cg BDDcucumber
+            mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "BDDcucumber/pom.xml" }}
+      - run:
+          name: Run Smoke Tests
+          command: |
+             cd BDDcucumber
+             circleci tests glob "src/test/resources/parallelExecution/**/*.feature" | circleci tests run --command="xargs -I {} mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags=\"@Regression or @Smoke\"" --verbose --split-by=timings
+      - store_test_results:
+          path: BDDcucumber/target/junit-reports/junit.xml
+      - store_artifacts:
+          path: BDDcucumber/test-output/SparkReport/
+          destination: spark_report
+      - store_artifacts:
+          path: BDDcucumber/PdfReport/ExtentPdf.pdf
+          destination: pdf_reports
+      - store_artifacts:
+          path: BDDcucumber/target/junit-reports/junit.xml
+          destination: JUnit_xml
           
 
 workflows:
@@ -84,5 +124,7 @@ workflows:
             branches:
               only:
                 - main
-  
+  smoke_workflow:
+   jobs:
+    - build_smoke
      

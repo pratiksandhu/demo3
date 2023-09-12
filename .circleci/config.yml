@@ -70,12 +70,19 @@ jobs:
           
 
 workflows:
-  build_dev:
+  main_workflow:
     jobs:
-      - build
-  regression_workflow:
-    jobs:
-      - build_regression
-          
+      - build:
+          filters:
+            branches:
+              only:
+                - main
+      - build_regression:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - main
   
      

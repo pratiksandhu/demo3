@@ -1,38 +1,76 @@
 version: 2.1
 
+parameters:
+  browser_type:
+    type: string
+    default: "chrome"
+
+executors:
+  maven-executor:
+    docker:
+      - image: cimg/openjdk:11.0-browsers
+    environment:
+      CHROME_BIN: /usr/bin/google-chrome
+      FIREFOX_BIN: /usr/bin/firefox
+      TEST_BROWSER: << pipeline.parameters.browser_type >>
+      
 jobs:
   build:
     docker:
       - image: cimg/openjdk:11.0 
-
     steps:
       - checkout 
-
       - run:
           name: Compile and run Java code
           command: |
             javac src/hello.java
             java -cp src hello
-  trigger_regression:
-    docker:
-      - image: cimg/python:3.8
+  build_regression:
+    executor: maven-executor
     steps:
       - run:
-          name: Trigger regression_workflow in bddcucumber
-          command: |
-            curl -u ${CIRCLECI_TOKEN}: -X POST --header "Content-Type: application/json" \
-            -d '{"branch": "master", "parameters": {"regression_workflow": true}}' \
-            https://circleci.com/api/v2/project/gh/pratiksandhu/BDDcucumber/pipeline
+          name: Clone git repo
+          command: git clone https://github.com/pratiksandhu/BDDcucumber.git
+      - run:
+          name: Set Timezone
+          command: echo 'export TZ="/usr/share/zoneinfo/America/Toronto"' >> $BASH_ENV
+      - run:
+          name: Update Packages
+          command: sudo apt-get update
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            - v1-dependencies-
+      - run:
+          name: Install Dependencies
+          command: mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: Run Regression Tests
+          command: mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags="@Regression"" 
+      - store_test_results:
+          path: target/junit-reports/junit.xml
+      - store_artifacts:
+          path: test-output/SparkReport/
+          destination: spark_report
+      - store_artifacts:
+          path: PdfReport/ExtentPdf.pdf
+          destination: pdf_reports
+      - store_artifacts:
+          path: target/junit-reports/junit.xml
+          destination: JUnit_xml 
           
 
 workflows:
-  build_and_trigger:
+  build_dev:
     jobs:
       - build
-      - trigger_regression:
-          requires:
-            - build
-          filters:
-            branches:
-              only:
-                - master
+  regression_workflow:
+    jobs:
+      - build_regression
+          
+  
+     

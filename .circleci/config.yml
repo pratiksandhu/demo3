@@ -54,7 +54,7 @@ jobs:
           name: Run Regression Tests
           command: |
             cd BDDcucumber
-            mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.features-{} -Dcucumber.filter.tags="@Regression" 
+            mvn clean verify -Dbrowser=${TEST_BROWSER} -Dcucumber.filter.tags="@Regression" 
       - store_test_results:
           path: BDDcucumber/target/junit-reports/junit.xml
       - store_artifacts:
@@ -124,7 +124,5 @@ workflows:
             branches:
               only:
                 - main
-  smoke_workflow:
-   jobs:
-    - build_smoke
+  
      
